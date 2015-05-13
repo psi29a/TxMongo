@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Release 15.1 (UNRELEASED)
+-------------------------
+
+This release is dedicated to fine-tuning 3.0 support.
+
+Bugfixes
+^^^^^^^^
+- Use travis-ci, tox and coveralls infrastructure
+- With above, we've identified a number of tests that fail.
+
+
 Release 15.0 (2015-05-04)
 -------------------------
 
