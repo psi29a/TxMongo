@@ -26,14 +26,12 @@ class TestMongoConnection(unittest.TestCase):
 
     def setUp(self):
         self.named_conn = txmongo.connection.ConnectionPool("mongodb://127.0.0.1/dbname")
-        self.unnamed_conn = txmongo.connection.ConnectionPool("mongodb://127.0.0.1/")
-        self.ip_conn = txmongo.connection.ConnectionPool("127.0.0.1/")
+        self.unnamed_conn = txmongo.connection.ConnectionPool("127.0.0.1")
 
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.named_conn.disconnect()
         yield self.unnamed_conn.disconnect()
-        yield self.ip_conn.disconnect()
 
     def test_GetDefaultDatabase(self):
         self.assertEqual(self.named_conn.get_default_database().name,
