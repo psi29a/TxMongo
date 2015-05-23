@@ -16,9 +16,7 @@
 
 import datetime
 import math
-
 import os
-
 
 try:
     from cStringIO import StringIO
@@ -29,15 +27,6 @@ from twisted.internet import defer
 from txmongo._gridfs.errors import CorruptGridFile, UnsupportedAPI
 from bson import Binary, ObjectId
 from txmongo.collection import Collection
-
-try:
-    _SEEK_SET = os.SEEK_SET
-    _SEEK_CUR = os.SEEK_CUR
-    _SEEK_END = os.SEEK_END
-except AttributeError:  # before 2.5
-    _SEEK_SET = 0
-    _SEEK_CUR = 1
-    _SEEK_END = 2
 
 """Default chunk size, in bytes."""
 DEFAULT_CHUNK_SIZE = 256 * 1024
@@ -61,7 +50,7 @@ def _create_property(field_name, docstring,
         self._file[field_name] = value
 
     if read_only:
-        docstring = docstring + "\n\nThis attribute is read-only."
+        docstring += "\n\nThis attribute is read-only."
     elif not closed_only:
         docstring = "%s\n\n%s" % (docstring, "This attribute can only be "
                                              "set before :meth:`close` has been called.")
@@ -241,7 +230,7 @@ class GridIn(object):
                     data = data.encode(self.encoding)
                 except AttributeError:
                     raise TypeError("must specify an encoding for file in "
-                                    "order to write %s" % (data.__name__,))
+                                    "order to write %s" % data)
             read = StringIO(data).read
 
         if self._buffer.tell() > 0:
@@ -374,7 +363,7 @@ class GridOut(object):
         """
         return self.__position
 
-    def seek(self, pos, whence=_SEEK_SET):
+    def seek(self, pos, whence=os.SEEK_SET):
         """Set the current position of this file.
 
         :Parameters:
@@ -386,11 +375,11 @@ class GridOut(object):
            to the current position, :attr:`os.SEEK_END` (``2``) to
            seek relative to the file's end.
         """
-        if whence == _SEEK_SET:
+        if whence == os.SEEK_SET:
             new_pos = pos
-        elif whence == _SEEK_CUR:
+        elif whence == os.SEEK_CUR:
             new_pos = self.__position + pos
-        elif whence == _SEEK_END:
+        elif whence == SEEK_END:
             new_pos = int(self.length) + pos
         else:
             raise IOError(22, "Invalid value for `whence`")

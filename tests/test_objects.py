@@ -143,11 +143,30 @@ class TestGridFsObjects(unittest.TestCase):
         """ Tests gridfs objects """
         conn = yield txmongo.MongoConnection(mongo_host, mongo_port)
         db = conn.test
-        
+        db.fs.files.remove({})  # drop all objects there first
         gfs = gridfs.GridFS(db)  # Default collection
-        
-        _ = GridIn(db.fs, filename="test", contentType="text/plain",
-                   chunk_size=2**2**2**2)
+        grid_in_file = GridIn(db.fs, filename="test", contentType="text/plain",
+                              content_type="text/plain", chunk_size=2**2**2**2)
+        self.assertFalse(grid_in_file.closed)
+        with self.assertRaises(TypeError):
+            yield grid_in_file.write(1)
+        with self.assertRaises(TypeError):
+            yield grid_in_file.write(u"0xDEADBEEF")
+        yield grid_in_file.write("0xDEADBEEF")
+        with self.assertRaises(AttributeError):
+            _ = grid_in_file.test
+        grid_in_file.test = 1
+        self.assertEqual(1, grid_in_file.test)
+        yield grid_in_file.close()
+        with self.assertRaises(AttributeError):
+            grid_in_file.test = 2
+        self.assertEqual(1, grid_in_file.test)
+        with self.assertRaises(AttributeError):
+            _ = grid_in_file.test_none
+        self.assertTrue(grid_in_file.closed)
+        with self.assertRaises(ValueError):
+            yield grid_in_file.write("0xDEADBEEF")
+        yield gfs.delete(u"test")
         _ = gfs.new_file(filename="test2", contentType="text/plain",
                          chunk_size=2**2**2**2)
         
@@ -159,6 +178,7 @@ class TestGridFsObjects(unittest.TestCase):
         """ Tests gridfs operations """
         conn = yield txmongo.MongoConnection(mongo_host, mongo_port)
         db = conn.test
+        db.fs.files.remove({})  # Drop files first TODO: iterate through files and delete them
         
         # Don't forget to disconnect
         self.addCleanup(self._disconnect, conn)
