@@ -24,6 +24,7 @@ from txmongo import filter as qf
 from txmongo._gridfs import GridIn
 from twisted.trial import unittest
 from twisted.internet import base, defer
+from twisted import _version
 
 mongo_host = "127.0.0.1"
 mongo_port = 27017
@@ -148,24 +149,28 @@ class TestGridFsObjects(unittest.TestCase):
         grid_in_file = GridIn(db.fs, filename="test", contentType="text/plain",
                               content_type="text/plain", chunk_size=2**2**2**2)
         self.assertFalse(grid_in_file.closed)
-        with self.assertRaises(TypeError):
-            yield grid_in_file.write(1)
-        with self.assertRaises(TypeError):
-            yield grid_in_file.write(u"0xDEADBEEF")
-        yield grid_in_file.write("0xDEADBEEF")
-        with self.assertRaises(AttributeError):
-            _ = grid_in_file.test
+        if _version.version.major >= 15:
+            with self.assertRaises(TypeError):
+                yield grid_in_file.write(1)
+            with self.assertRaises(TypeError):
+                yield grid_in_file.write(u"0xDEADBEEF")
+            with self.assertRaises(AttributeError):
+                _ = grid_in_file.test
         grid_in_file.test = 1
+        yield grid_in_file.write("0xDEADBEEF")
         self.assertEqual(1, grid_in_file.test)
         yield grid_in_file.close()
-        with self.assertRaises(AttributeError):
-            grid_in_file.test = 2
+        if _version.version.major >= 15:
+            with self.assertRaises(AttributeError):
+                grid_in_file.test = 2
         self.assertEqual(1, grid_in_file.test)
-        with self.assertRaises(AttributeError):
-            _ = grid_in_file.test_none
+        if _version.version.major >= 15:
+            with self.assertRaises(AttributeError):
+                _ = grid_in_file.test_none
         self.assertTrue(grid_in_file.closed)
-        with self.assertRaises(ValueError):
-            yield grid_in_file.write("0xDEADBEEF")
+        if _version.version.major >= 15:
+            with self.assertRaises(ValueError):
+                yield grid_in_file.write("0xDEADBEEF")
         yield gfs.delete(u"test")
         _ = gfs.new_file(filename="test2", contentType="text/plain",
                          chunk_size=2**2**2**2)

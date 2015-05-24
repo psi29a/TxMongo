@@ -379,7 +379,7 @@ class GridOut(object):
             new_pos = pos
         elif whence == os.SEEK_CUR:
             new_pos = self.__position + pos
-        elif whence == SEEK_END:
+        elif whence == os.SEEK_END:
             new_pos = int(self.length) + pos
         else:
             raise IOError(22, "Invalid value for `whence`")
