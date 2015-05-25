@@ -24,7 +24,7 @@ except ImportError:
     from StringIO import StringIO
 
 from twisted.internet import defer
-from txmongo._gridfs.errors import CorruptGridFile, UnsupportedAPI
+from txmongo._gridfs.errors import CorruptGridFile
 from bson import Binary, ObjectId
 from txmongo.collection import Collection
 
@@ -393,10 +393,6 @@ class GridOut(object):
         self.__buffer = ''
         self.__current_chunk = -1
 
-    def __iter__(self):
-        """Deprecated."""
-        raise UnsupportedAPI("Iterating is deprecated for iterated reading")
-
     def __repr__(self):
         return str(self._file)
 
@@ -422,15 +418,3 @@ class GridOutIterator(object):
             raise CorruptGridFile("no chunk #%d" % self.__current_chunk)
         self.__current_chunk += 1
         defer.returnValue(str(chunk["data"]))
-
-
-class GridFile(object):
-    """No longer supported.
-
-    .. versionchanged:: 1.6
-       The GridFile class is no longer supported.
-    """
-
-    def __init__(self, *args, **kwargs):
-        raise UnsupportedAPI("The GridFile class is no longer supported. "
-                             "Please use GridIn or GridOut instead.")
