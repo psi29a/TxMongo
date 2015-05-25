@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import time
 from StringIO import StringIO
 
@@ -21,7 +22,7 @@ from txmongo import database
 from txmongo import collection
 from txmongo import gridfs
 from txmongo import filter as qf
-from txmongo._gridfs import GridIn
+from txmongo._gridfs import GridIn, GridOut
 from twisted.trial import unittest
 from twisted.internet import base, defer
 from twisted import _version
@@ -146,6 +147,8 @@ class TestGridFsObjects(unittest.TestCase):
         db = conn.test
         db.fs.files.remove({})  # drop all objects there first
         gfs = gridfs.GridFS(db)  # Default collection
+        with GridIn(db.fs, filename="test3", contentType="text/plain", chunk_size=1024):
+            pass
         grid_in_file = GridIn(db.fs, filename="test", contentType="text/plain",
                               content_type="text/plain", chunk_size=2**2**2**2)
         self.assertFalse(grid_in_file.closed)
@@ -158,7 +161,23 @@ class TestGridFsObjects(unittest.TestCase):
                 _ = grid_in_file.test
         grid_in_file.test = 1
         yield grid_in_file.write("0xDEADBEEF")
-        self.assertEqual(1, grid_in_file.test)
+        yield grid_in_file.write("0xDEADBEEF"*1048576)
+        fake_doc = {"_id": "test_id", "length": 1048576}
+        grid_out_file = GridOut(db.rs, fake_doc)
+        if _version.version.major >= 15:
+            with self.assertRaises(AttributeError):
+                _ = grid_out_file.testing
+        self.assertEqual(0, grid_out_file.tell())
+        grid_out_file.seek(1024)
+        self.assertEqual(1024, grid_out_file.tell())
+        grid_out_file.seek(1024, os.SEEK_CUR)
+        self.assertEqual(2048, grid_out_file.tell())
+        grid_out_file.seek(0, os.SEEK_END)
+        self.assertEqual(1048576, grid_out_file.tell())
+        self.assertRaises(IOError, grid_out_file.seek, 0, 4)
+        self.assertRaises(IOError, grid_out_file.seek, -1)
+        self.assertEqual("{'length': 1048576, '_id': 'test_id'}", repr(grid_out_file))
+        yield grid_in_file.writelines(["0xDEADBEEF", "0xDEADBEAF"])
         yield grid_in_file.close()
         if _version.version.major >= 15:
             with self.assertRaises(AttributeError):
@@ -174,7 +193,6 @@ class TestGridFsObjects(unittest.TestCase):
         yield gfs.delete(u"test")
         _ = gfs.new_file(filename="test2", contentType="text/plain",
                          chunk_size=2**2**2**2)
-        
         # disconnect
         yield conn.disconnect()
         
