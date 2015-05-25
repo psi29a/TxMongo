@@ -176,7 +176,7 @@ class TestGridFsObjects(unittest.TestCase):
         self.assertEqual(1048576, grid_out_file.tell())
         self.assertRaises(IOError, grid_out_file.seek, 0, 4)
         self.assertRaises(IOError, grid_out_file.seek, -1)
-        self.assertEqual("{'length': 1048576, '_id': 'test_id'}", repr(grid_out_file))
+        self.assertTrue("'_id': 'test_id'" in repr(grid_out_file))
         yield grid_in_file.writelines(["0xDEADBEEF", "0xDEADBEAF"])
         yield grid_in_file.close()
         if _version.version.major >= 15:
