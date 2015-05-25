@@ -141,12 +141,11 @@ class TestGridFsObjects(unittest.TestCase):
         yield conn.disconnect()
     
     @defer.inlineCallbacks
-    def test_GridFsObjects(self):
+    def test_GridFileObjects(self):
         """ Tests gridfs objects """
         conn = yield txmongo.MongoConnection(mongo_host, mongo_port)
         db = conn.test
         db.fs.files.remove({})  # drop all objects there first
-        gfs = gridfs.GridFS(db)  # Default collection
         with GridIn(db.fs, filename="test3", contentType="text/plain", chunk_size=1024):
             pass
         grid_in_file = GridIn(db.fs, filename="test", contentType="text/plain",
@@ -190,12 +189,37 @@ class TestGridFsObjects(unittest.TestCase):
         if _version.version.major >= 15:
             with self.assertRaises(ValueError):
                 yield grid_in_file.write("0xDEADBEEF")
+        yield conn.disconnect()
+
+    @defer.inlineCallbacks
+    def test_GridFileObjects(self):
+        """ Tests gridfs objects """
+        conn = yield txmongo.MongoConnection(mongo_host, mongo_port, 1)
+        db = conn.test
+        db.fs.files.remove({})  # drop all objects there first
+        gfs = gridfs.GridFS(db)  # Default collection
         yield gfs.delete(u"test")
+
         _ = gfs.new_file(filename="test2", contentType="text/plain",
                          chunk_size=2**2**2**2)
+        yield conn.disconnect()
+
+        conn = yield txmongo.MongoConnection(mongo_host, mongo_port, 1)
+        db = conn.test
+        db.fs.files.remove({})  # drop all objects there first
+        gfs = gridfs.GridFS(db)  # Default collection
+        _ = yield gfs.put("0xDEADBEEF", filename="test3", contentType="text/plain",
+                          chunk_size=2**2**2**2)
         # disconnect
         yield conn.disconnect()
-        
+
+        conn = yield txmongo.MongoConnection(mongo_host, mongo_port, 1)
+        db = conn.test
+        gfs = gridfs.GridFS(db)  # Default collection
+        get_file = yield gfs.get("test3")
+        # disconnect
+        yield conn.disconnect()
+
     @defer.inlineCallbacks
     def test_GridFsOperations(self):
         """ Tests gridfs operations """
