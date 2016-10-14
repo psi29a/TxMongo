@@ -38,7 +38,7 @@ def _create_property(field_name, docstring,
         if closed_only and not self._closed:
             raise AttributeError(
                 "TxMongo: can only get {0} on a closed file.".format(repr(field_name)))
-        return self._file.get(field_name, None)
+        return self._file.get(field_name)
 
     def setter(self, value):
         if self._closed:

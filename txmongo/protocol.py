@@ -397,8 +397,8 @@ class MongoProtocol(MongoServerProtocol, MongoClientProtocol):
             assert len(reply.documents) == 1
 
             document = reply.documents[0].decode()
-            err = document.get("err", None)
-            code = document.get("code", None)
+            err = document.get("err")
+            code = document.get("code")
 
             if err is not None:
                 if code == 11000:
@@ -541,24 +541,24 @@ class MongoProtocol(MongoServerProtocol, MongoClientProtocol):
 
 
 class MongoDecoder:
-    dataBuffer = None
+    data_buffer = None
 
     def __init__(self):
-        self.dataBuffer = b''
+        self.data_buffer = b''
 
     def feed(self, data):
-        self.dataBuffer += data
+        self.data_buffer += data
 
     def __next__(self):
-        if len(self.dataBuffer) < 16:
+        if len(self.data_buffer) < 16:
             return None
-        message_length, = struct.unpack("<i", self.dataBuffer[:4])
-        if len(self.dataBuffer) < message_length:
+        message_length, = struct.unpack("<i", self.data_buffer[:4])
+        if len(self.data_buffer) < message_length:
             return None
         if message_length < 16:
             raise ConnectionFailure()
-        message_data = self.dataBuffer[:message_length]
-        self.dataBuffer = self.dataBuffer[message_length:]
+        message_data = self.data_buffer[:message_length]
+        self.data_buffer = self.data_buffer[message_length:]
         return self.decode(message_data)
     next = __next__
 

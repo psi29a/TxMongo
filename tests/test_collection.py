@@ -28,7 +28,7 @@ mongo_host = "localhost"
 mongo_port = 27017
 
 
-def cmp(a, b):
+def compare(a, b):
     if not isinstance(a, b.__class__) or not isinstance(b, a.__class__):
         return -1
     return (a > b) - (a < b)
@@ -81,7 +81,7 @@ class TestIndexInfo(unittest.TestCase):
 
         self.assert_(isinstance(self.db.test, Collection))
         self.assertEqual(NotImplemented, self.db.test.__cmp__(7))
-        self.assertNotEqual(cmp(self.db.test, 7), 0)
+        self.assertNotEqual(compare(self.db.test, 7), 0)
         self.assertEqual(self.db.test, Collection(self.db, "test"))
         self.assertEqual(self.db.test.mike, self.db["test.mike"])
         self.assertEqual(self.db.test["mike"], self.db["test.mike"])

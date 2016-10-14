@@ -16,6 +16,7 @@ from twisted.python.compat import StringType
 from txmongo.database import Database
 from txmongo.protocol import MongoProtocol, Query
 from txmongo.utils import timeout
+import warnings
 
 DEFAULT_MAX_BSON_SIZE = 16777216
 DEFAULT_MAX_WRITE_BATCH_SIZE = 1000
@@ -26,7 +27,7 @@ _PRIMARY_READ_PREFERENCES = {ReadPreference.PRIMARY.mode, ReadPreference.PRIMARY
 
 class _Connection(ReconnectingClientFactory):
     __notify_ready = None
-    __allnodes = None
+    __all_nodes = None
     __index = -1
     __uri = None
 
@@ -34,7 +35,7 @@ class _Connection(ReconnectingClientFactory):
     protocol = MongoProtocol
 
     def __init__(self, pool, uri, connection_id, initial_delay, max_delay):
-        self.__allnodes = list(uri["nodelist"])
+        self.__all_nodes = list(uri["nodelist"])
         self.__notify_ready = []
         self.__pool = pool
         self.__uri = uri
@@ -131,8 +132,8 @@ class _Connection(ReconnectingClientFactory):
                     host = host.split(':', 1)
                     host[1] = int(host[1])
                     host = tuple(host)
-                if host not in self.__allnodes:
-                    self.__allnodes.append(host)
+                if host not in self.__all_nodes:
+                    self.__all_nodes.append(host)
 
         # Check if this node is the master.
         ismaster = config.get("ismaster")
@@ -190,11 +191,11 @@ class _Connection(ReconnectingClientFactory):
         delay = False
         self.__index += 1
 
-        if self.__index >= len(self.__allnodes):
+        if self.__index >= len(self.__all_nodes):
             self.__index = 0
             delay = True
 
-        connector.host, connector.port = self.__allnodes[self.__index]
+        connector.host, connector.port = self.__all_nodes[self.__index]
 
         if delay:
             self.retry(connector)

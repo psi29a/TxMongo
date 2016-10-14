@@ -1022,10 +1022,10 @@ class Collection(object):
     def find_and_modify(self, query=None, update=None, upsert=False, **kwargs):
         no_obj_error = "No matching object found"
 
-        if not update and not kwargs.get("remove", None):
+        if not update and not kwargs.get("remove"):
             raise ValueError("TxMongo: must either update or remove.")
 
-        if update and kwargs.get("remove", None):
+        if update and kwargs.get("remove"):
             raise ValueError("TxMongo: can't do both update and remove.")
 
         params = kwargs
